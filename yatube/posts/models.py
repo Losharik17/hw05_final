@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
-from pytils.translit import slugify
+from core.debugging_tools import slugify
 
 User = get_user_model()
 
