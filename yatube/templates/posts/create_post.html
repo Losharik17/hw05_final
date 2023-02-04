@@ -1,0 +1,38 @@
+{% extends "card_base.html" %}
+
+{% block title %}
+  {% if is_edit %}
+    Редактировать запись
+  {% else %}
+    Добавить запись
+  {% endif %}
+{% endblock %}
+
+{% block card_header %}
+  {% if is_edit %}
+    Редактировать запись
+  {% else %}
+    Добавить запись
+  {% endif %}
+{% endblock %}
+
+{% block card_body %}
+  <form method="post" action="
+    {% if post_id %}
+      {% url 'posts:post_edit' post_id %}
+    {% else %}
+      {% url 'posts:post_create' %}
+    {% endif %}
+  " enctype="multipart/form-data">
+    {% include 'includes/form_body.html' with form=form %}
+    <div class="mx-auto d-flex justify-content-center">
+      <button type="submit" class="btn btn-primary">
+        {% if post_id %}
+          Сохранить
+        {% else %}
+          Добавить
+        {% endif %}
+      </button>
+    </div>
+  </form>
+{% endblock %}

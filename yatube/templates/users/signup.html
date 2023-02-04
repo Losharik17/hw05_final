@@ -1,0 +1,16 @@
+{% extends "card_base.html" %}
+
+{% block title %}Зарегистрироваться{% endblock %}
+
+{% block card_header %}Зарегистрироваться{% endblock %}
+
+{% block card_body %}
+  <form method="post" action="{% url 'users:signup' %}">
+    {% include 'includes/form_body.html' with form=form %}
+    <div class="mx-auto d-flex justify-content-center">
+      <button type="submit" class="btn btn-primary">
+        Зарегистрироваться
+      </button>
+    </div>
+  </form>
+{% endblock %}

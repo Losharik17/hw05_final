@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Посты твоих авторов
+{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    <h1>Посты твоих авторов</h1>
+    {% include 'posts/includes/switcher.html' %}
+    {% for post in page_obj %}
+      {% include 'includes/single_post.html' with post=post %}
+    {% endfor %}
+    {% include 'posts/includes/paginator.html' with page_obj=page_obj %}
+  </div>{% endblock %}
