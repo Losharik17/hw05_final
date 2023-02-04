@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+
 from core.debugging_tools import slugify
 
 User = get_user_model()
@@ -94,6 +95,16 @@ class Comment(models.Model):
         help_text='Дата публикации комментария',
     )
 
+    def __str__(self):
+        return (f'{self.author.username} '
+                f'[{self.created.strftime("%H:%M %d.%m.%y")}]: '
+                f'{self.text[:30]}')
+
+    class Meta:
+        verbose_name_plural = "Комментарии"
+        verbose_name = "Комментарий"
+        ordering = ['-created']
+
 
 class Follow(models.Model):
     user = models.ForeignKey(
@@ -108,3 +119,10 @@ class Follow(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'], name='unique_author_user_following'
+            )
+        ]

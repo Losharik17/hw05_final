@@ -59,7 +59,7 @@ class ProfileView(TemplateView):
         context = super(ProfileView, self).get_context_data(**kwargs)
 
         user = get_object_or_404(
-            User.objects.prefetch_related('posts__group'),
+            User.objects.prefetch_related('posts', 'following'),
             username=username
         )
         post_list = user.posts.all()
@@ -67,7 +67,7 @@ class ProfileView(TemplateView):
         posts_count = page_obj.paginator.count
 
         following = None
-        if self.request.user.is_authenticated:
+        if self.request.user.is_authenticated and user != self.request.user:
             following = Follow.objects.filter(
                 user=self.request.user, author=user,
             ).exists()
@@ -76,6 +76,7 @@ class ProfileView(TemplateView):
             'author': user,
             'page_obj': page_obj,
             'posts_count': posts_count,
+            'followers_count': user.following.count(),
             'following': following,
         })
         return context
@@ -158,7 +159,7 @@ class AddCommentView(LoginRequiredMixin, FormView):
         comment.author = self.request.user
         comment.post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         comment.save()
-        return redirect(self.get_success_url())
+        return super(AddCommentView, self).form_valid(form)
 
     def get_success_url(self):
         return reverse_lazy(
@@ -173,9 +174,8 @@ class FollowIndexView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(FollowIndexView, self).get_context_data(**kwargs)
 
-        following = self.request.user.follower.values_list('author')
-        post_list = Post.objects.filter(author__in=following).all()
-        page_obj = get_page_object(self.request.GET.get('page'), post_list)
+        posts = Post.objects.filter(author__following__user=self.request.user)
+        page_obj = get_page_object(self.request.GET.get('page'), posts)
 
         context.update({
             'page_obj': page_obj,
@@ -186,11 +186,8 @@ class FollowIndexView(LoginRequiredMixin, TemplateView):
 class ProfileFollowView(LoginRequiredMixin, View):
     def get(self, request, username):
         author = get_object_or_404(User, username=username)
-        follow = Follow.objects.filter(
-            author=author, user=request.user
-        )
-        if not follow.exists() and request.user != author:
-            Follow.objects.create(author=author, user=request.user)
+        if request.user != author:
+            Follow.objects.get_or_create(author=author, user=request.user)
 
         return redirect('posts:profile', username=username)
 
@@ -198,10 +195,6 @@ class ProfileFollowView(LoginRequiredMixin, View):
 class ProfileUnfollowView(LoginRequiredMixin, View):
     def get(self, request, username):
         author = get_object_or_404(User, username=username)
-        follow = Follow.objects.filter(
-            author=author, user=request.user
-        )
-        if follow.exists():
-            follow.first().delete()
+        Follow.objects.filter(author=author, user=request.user).delete()
 
         return redirect('posts:profile', username=username)
