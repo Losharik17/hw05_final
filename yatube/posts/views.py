@@ -5,11 +5,11 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
-from django.views.generic import (TemplateView, CreateView, UpdateView,
-                                  FormView, View)
+from django.views.generic import (CreateView, FormView, TemplateView,
+                                  UpdateView, View)
 
-from .forms import PostForm, CommentForm
-from .models import Group, Post, User, Follow
+from .forms import CommentForm, PostForm
+from .models import Follow, Group, Post, User
 
 
 def get_page_object(page_number: int, model_list):

@@ -1,4 +1,5 @@
 from django.test import Client, TestCase
+
 from posts.models import User
 from posts.tests.test_forms import get_url
 from users.forms import CreationForm

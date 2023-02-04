@@ -1,4 +1,5 @@
 from django.test import TestCase
+
 from posts.models import Group, Post, User
 
 
@@ -7,7 +8,7 @@ class ModelsTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.user = User.objects.create(username='Ivanov34')
+        cls.user = User.objects.create_user('Ivanov34')
         cls.group = Group.objects.create(
             title='Спорт',
             description='Всё о спорте',

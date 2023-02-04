@@ -2,11 +2,12 @@ import shutil
 import tempfile
 
 from django.conf import settings
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from posts.models import Group, Post, User, Comment
+from posts.models import Comment, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -40,7 +41,7 @@ class PostFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.user = User.objects.create(username='Ivanov37')
+        cls.user = User.objects.create_user('Ivanov37')
         cls.group1 = Group.objects.create(
             title='Культура',
             description='Про культуру',
@@ -63,6 +64,7 @@ class PostFormTests(TestCase):
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(PostFormTests.user)
+        cache.clear()
 
     def test_create_post_add_new_post(self):
         """Заполненная форма создает запись в Post."""
@@ -133,7 +135,7 @@ class CommentFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.user = User.objects.create(username='Ivanov37')
+        cls.user = User.objects.create_user('Ivanov37')
         cls.group = Group.objects.create(
             title='Культура',
             description='Про культуру',
@@ -153,6 +155,7 @@ class CommentFormTests(TestCase):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(CommentFormTests.user)
+        cache.clear()
 
     def test_create_post_add_new_post(self):
         """Заполненная форма создает запись в Comments, а пользователь

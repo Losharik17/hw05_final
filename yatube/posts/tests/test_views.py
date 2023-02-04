@@ -1,10 +1,12 @@
 import shutil
 
+from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 
-from posts.forms import PostForm, CommentForm
-from posts.models import Group, Post, User, Follow
-from .test_forms import get_url, get_small_gif, TEMP_MEDIA_ROOT
+from posts.forms import CommentForm, PostForm
+from posts.models import Follow, Group, Post, User
+
+from .test_forms import TEMP_MEDIA_ROOT, get_small_gif, get_url
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
@@ -13,7 +15,7 @@ class PostsPagesTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.user = User.objects.create(username='Ivanov34')
+        cls.user = User.objects.create_user('Ivanov34')
         cls.group = Group.objects.create(
             title='Спорт',
             description='Про спорт',
@@ -33,6 +35,7 @@ class PostsPagesTests(TestCase):
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(PostsPagesTests.user)
+        cache.clear()
 
     def assertPostEqual(self, post1, post2):
         attributes = ('id', 'text', 'author', 'group', 'image')
@@ -184,8 +187,8 @@ class PaginatorViewsTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.user1 = User.objects.create(username='Ivanov34')
-        cls.user2 = User.objects.create(username='Smirnov61')
+        cls.user1 = User.objects.create_user('Ivanov34')
+        cls.user2 = User.objects.create_user('Smirnov61')
         cls.group1 = Group.objects.create(
             title='Спорт',
             description='Группа о спорте',
@@ -215,6 +218,7 @@ class PaginatorViewsTest(TestCase):
 
     def setUp(self):
         self.guest_client = Client()
+        cache.clear()
 
     def test_page_records(self):
         """Страница содержит правильное кол-во постов."""
@@ -245,7 +249,7 @@ class NewPostTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.user = User.objects.create(username='Ivanov34')
+        cls.user = User.objects.create_user('Ivanov34')
         cls.group1 = Group.objects.create(
             title='Спорт',
             description='Группа о спорте',
@@ -262,6 +266,7 @@ class NewPostTest(TestCase):
 
     def setUp(self):
         self.guest_client = Client()
+        cache.clear()
 
     def test_new_post_on_page(self):
         """Новый пост отображается на страницах группы, автора и главной."""
@@ -290,9 +295,9 @@ class FollowModuleTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.author = User.objects.create(username='Ivanov34')
-        cls.follower = User.objects.create(username='Smirnov61')
-        cls.unfollower = User.objects.create(username='Sidorov48')
+        cls.author = User.objects.create_user('Ivanov34')
+        cls.follower = User.objects.create_user('Smirnov61')
+        cls.unfollower = User.objects.create_user('Sidorov48')
         Follow.objects.create(
             author=cls.author, user=cls.follower
         )
@@ -302,6 +307,7 @@ class FollowModuleTest(TestCase):
         self.follower_client.force_login(FollowModuleTest.follower)
         self.unfollower_client = Client()
         self.unfollower_client.force_login(FollowModuleTest.unfollower)
+        cache.clear()
 
     def test_new_author_post_see_followers_and_unseen_unfollowers(self):
         """Новая запись пользователя появляется в ленте тех, кто подписан на

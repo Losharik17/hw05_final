@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from django.core.cache import cache
 from django.test import Client, TestCase
 
 from posts.models import Group, Post, User
@@ -10,7 +11,7 @@ class PostsURLTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.user = User.objects.create(username='Ivanov34')
+        cls.user = User.objects.create_user('Ivanov34')
         cls.group = Group.objects.create(
             title='Спорт',
             description='Группа о спорте',
@@ -25,6 +26,7 @@ class PostsURLTests(TestCase):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(PostsURLTests.user)
+        cache.clear()
 
     # Общедоступные страницы
     def test_public_urls_exists(self):
@@ -78,7 +80,7 @@ class PostsURLTests(TestCase):
 
     def test_post_edit_nonauthor_redirect(self):
         """Перенаправление при попытке редактировать чужой пост."""
-        user = User.objects.create(username='Smirnov61')
+        user = User.objects.create_user('Smirnov61')
         authorized_client = Client()
         authorized_client.force_login(user)
 
