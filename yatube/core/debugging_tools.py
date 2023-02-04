@@ -29,7 +29,7 @@ def query_debugger(func):
     return inner_func
 
 
-#
+# на сервере нет pytils
 TRANSTABLE = (
     ("'", "'"),
     ('"', '"'),
