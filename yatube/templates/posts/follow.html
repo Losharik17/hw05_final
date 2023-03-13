@@ -8,7 +8,7 @@
   <div class="container py-5">
     <h1>Посты твоих авторов</h1>
     {% include 'posts/includes/switcher.html' %}
-    {% for post in page_obj %}
+    {% for post in posts %}
       {% include 'includes/single_post.html' with post=post %}
     {% endfor %}
     {% include 'posts/includes/paginator.html' with page_obj=page_obj %}

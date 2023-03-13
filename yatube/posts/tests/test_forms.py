@@ -88,16 +88,14 @@ class PostFormTests(TestCase):
                 username=PostFormTests.user.username
             )
         )
-        self.assertEqual(Post.objects.count(), posts_count + 1)
+        new_post = response.context['post']
 
-        new_post = Post.objects.filter(
-            text='Новый пост',
-            group=PostFormTests.group1,
-            author=PostFormTests.user,
-            image=f'posts/{filename}.gif'
-        )
-        self.assertTrue(new_post.exists())
-        self.assertNotIn(new_post.first().id, old_posts_id)
+        self.assertEqual(Post.objects.count(), posts_count + 1)
+        self.assertNotIn(response.context['post'].id, old_posts_id)
+        self.assertEqual(new_post.text, 'Новый пост')
+        self.assertEqual(new_post.group, PostFormTests.group1)
+        self.assertEqual(new_post.author, PostFormTests.user)
+        self.assertEqual(new_post.image, f'posts/{filename}.gif')
 
     def test_edit_post_not_add_new_post(self):
         """Редактирование поста не создаёт запись в Post,
@@ -127,6 +125,9 @@ class PostFormTests(TestCase):
             PostFormTests.post.group, PostFormTests.group2
         )
         self.assertIsNotNone(PostFormTests.post.image)
+
+        print(Post.objects.filter(
+            image='posts/edit_post_image.gif').first().image)
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)

@@ -9,7 +9,7 @@
     <h1>{{ group.title }}</h1>
     <p>{{ group.description }}</p>
 
-    {% for post in page_obj %}
+    {% for post in posts %}
       {% include 'includes/single_post.html' with post=post group_page=True %}
     {% endfor %}
 

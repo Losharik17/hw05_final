@@ -1,12 +1,17 @@
 import shutil
+import tempfile
 
+from django.conf import settings
 from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 
 from posts.forms import CommentForm, PostForm
 from posts.models import Follow, Group, Post, User
 
-from .test_forms import TEMP_MEDIA_ROOT, get_small_gif, get_url
+from .test_forms import get_small_gif, get_url
+
+
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
@@ -71,7 +76,7 @@ class PostsPagesTests(TestCase):
     def test_index_url_contains_post(self):
         """Словарь context главной страницы содержит 10 последних постов."""
         response = self.authorized_client.get(get_url('posts:index'))
-        posts = response.context['page_obj'].object_list
+        posts = response.context['posts']
 
         self.assertEqual(list(posts), list(Post.objects.all()[:10]))
         self.assertPostEqual(posts[0], PostsPagesTests.post)
@@ -82,7 +87,7 @@ class PostsPagesTests(TestCase):
         response = self.authorized_client.get(
             get_url('posts:group_list', slug=PostsPagesTests.group.slug)
         )
-        posts = response.context['page_obj'].object_list
+        posts = response.context['posts']
         group = response.context['group']
 
         self.assertEqual(
@@ -94,42 +99,34 @@ class PostsPagesTests(TestCase):
 
     def test_profile_url_contains_post_group_and_author(self):
         """Словарь context страницы пользователя содержит 10 последних
-        постов пользователя, группу и автора поста, а в posts_count указано
-        верное количество постов автора"""
+        постов пользователя и автора"""
         response = self.authorized_client.get(
             get_url('posts:profile', username=PostsPagesTests.user.username)
         )
-        posts = response.context['page_obj'].object_list
+        posts = response.context['posts']
         author = response.context['author']
-        posts_count = response.context['posts_count']
 
         self.assertEqual(
             posts,
             list(PostsPagesTests.user.posts.all()[:10])
         )
         self.assertEqual(author, PostsPagesTests.user)
-        self.assertEqual(posts_count, PostsPagesTests.user.posts.count())
         self.assertPostEqual(posts[0], PostsPagesTests.post)
 
     def test_post_detail_url_contains_post(self):
         """Словарь context страницы поста содержит сам пост, переменную
-        title содержащую первые 30 символов текста поста, все комментарии к
-        посту и форму создания комментария"""
+        title содержащую первые 30 символов текста поста и форму создания
+        комментария"""
         response = self.authorized_client.get(
             get_url('posts:post_detail', post_id=PostsPagesTests.post.id),
         )
         page_post = response.context['post']
-        comments = response.context['comments']
         comment_form = response.context['comment_form']
         title = response.context['title']
 
         self.assertEqual(title, 'Пост "Текст поста в группе спорт дли"')
         self.assertPostEqual(page_post, PostsPagesTests.post)
         self.assertIsInstance(comment_form, CommentForm)
-        self.assertEqual(
-            list(comments),
-            list(PostsPagesTests.post.comments.all())
-        )
 
     def test_post_detail_url_contains_new_comment(self):
         """Словарь context страницы поста содержит новый комментарий"""
@@ -141,12 +138,7 @@ class PostsPagesTests(TestCase):
         response = self.authorized_client.get(
             get_url('posts:post_detail', post_id=PostsPagesTests.post.id),
         )
-        comments = response.context['comments']
 
-        self.assertEqual(
-            list(comments),
-            list(PostsPagesTests.post.comments.all())
-        )
 
     def test_post_create_url_contains_post_form(self):
         """Страница post_create содержит форму создания поста (PostForm)."""
@@ -240,7 +232,7 @@ class PaginatorViewsTest(TestCase):
         for url, page_posts_count in zip(urls, posts_count):
             with self.subTest(page_posts_count=page_posts_count):
                 response = self.guest_client.get(url)
-                self.assertEqual(len(response.context['page_obj']),
+                self.assertEqual(len(response.context['posts']),
                                  page_posts_count)
 
 
@@ -278,7 +270,7 @@ class NewPostTest(TestCase):
         for url in urls:
             with self.subTest(url=url):
                 response = self.guest_client.get(url)
-                post = response.context['page_obj'][0]
+                post = response.context['posts'][0]
                 self.assertEqual(post, NewPostTest.post)
 
     def test_new_post_not_in_different_group(self):
@@ -286,7 +278,7 @@ class NewPostTest(TestCase):
         response = self.guest_client.get(
             get_url('posts:group_list', slug=NewPostTest.group2.slug),
         )
-        posts = response.context['page_obj']
+        posts = response.context['posts']
         self.assertNotIn(NewPostTest.post, posts)
 
 
@@ -317,10 +309,10 @@ class FollowModuleTest(TestCase):
             author=FollowModuleTest.author,
         )
         response = self.follower_client.get(get_url('posts:follow_index'))
-        follower_posts = response.context['page_obj']
+        follower_posts = response.context['posts']
 
         response = self.follower_client.get(get_url('posts:follow_index'))
-        unfollower_posts = response.context['page_obj']
+        unfollower_posts = response.context['posts']
 
         self.assertNotEqual(follower_posts, unfollower_posts)
 

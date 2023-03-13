@@ -18,7 +18,7 @@
 
 {% block card_body %}
   <form method="post" action="
-    {% if post_id %}
+    {% if post_id is not none %}
       {% url 'posts:post_edit' post_id %}
     {% else %}
       {% url 'posts:post_create' %}
@@ -27,7 +27,7 @@
     {% include 'includes/form_body.html' with form=form %}
     <div class="mx-auto d-flex justify-content-center">
       <button type="submit" class="btn btn-primary">
-        {% if post_id %}
+        {% if post_id is not none %}
           Сохранить
         {% else %}
           Добавить
